@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Bitcoin Lottery</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; color: #fff; background-color: #121212; display: flex; flex-direction: column; }
+    body { min-height: 100vh; }
+    .hero { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem 1rem; }
+    .hero h1 { font-size: 3rem; margin: 0.5rem 0; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+    .hero p { font-size: 1.2rem; margin: 0.5rem 0 1rem; }
+    .badges { display: grid; grid-template-columns: repeat(4, auto); gap: 0.75rem; justify-content: center; margin-bottom: 2rem; }
+    .badge { background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.9rem; text-transform: uppercase; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+    #jackpot { font-size: 1.5rem; margin-bottom: 1.5rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); }
+    #explanation { max-width: 800px; margin: 0 0 2rem; padding: 0 1rem; line-height: 1.5; text-shadow: 1px 1px 4px rgba(0,0,0,0.5); text-align: center; }
+    #spinBtn { font-size: 1.2rem; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; background: rgba(255,255,255,0.1); color: #ffd700; font-weight: bold; box-shadow: 0 0 20px #ff0066, 0 0 40px #ff0066; transition: all 0.3s ease; margin-bottom: 2rem; }
+    #spinBtn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+    #spinBtn:focus { outline: 3px solid #fff; }
+    #result { text-align: center; margin-top: 1rem; opacity: 0; transition: opacity 0.8s ease; }
+    #result.visible { opacity: 1; }
+    #result code { display: block; background: rgba(0,0,0,0.3); padding: 1rem; margin: 1rem auto; border-radius: 4px; word-break: break-all; max-width: 90%; }
+    footer { margin-top: auto; background: rgba(0,0,0,0.8); text-align: center; padding: 1rem; font-size: 0.9rem; }
+    #twitterLink { position: fixed; bottom: 64px; right: 16px; width: 32px; height: 32px; }
+    #twitterLink svg { width: 100%; height: 100%; fill: #1da1f2; transition: transform 0.3s ease; }
+    #twitterLink:hover svg { transform: scale(1.1); }
+    #faqBtn { position: fixed; top: 16px; right: 16px; background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 0 5px rgba(0,0,0,0.5); z-index: 1001; }
+    #faqBtn:focus { outline: 3px solid #fff; }
+    #faqModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: #fff; color: #000; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 500px; max-height: 80%; overflow-y: auto; position: relative; }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content .qa { margin-bottom: 1rem; }
+    .modal-content .qa h4 { margin: 0.5rem 0; font-size: 1rem; }
+    .modal-content .qa p { margin: 0.25rem 0 0; font-size: 0.9rem; }
+    #closeModal { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2.5rem; }
+      #spinBtn { width: 100%; box-sizing: border-box; }
+      .badges { grid-template-columns: 1fr; gap: 0.5rem; }
+    }
+    .confetti { position: fixed; pointer-events: none; opacity: 1; }
+  </style>
+</head>
+<body>
+  <button id="faqBtn">FAQ</button>
+  <div class="hero">
+    <h1>Bitcoin Lottery</h1>
+    <p>Try your luck and open a random bitcoin wallet in a first of it kind lottery</p>
+    <div class="badges">
+      <span class="badge">No Registration</span>
+      <span class="badge">No KYC</span>
+      <span class="badge">Zero Fees</span>
+      <span class="badge">No Regulations</span>
+      <span class="badge">No Bullshit</span>
+      <span class="badge">Biggest cash pool ever</span>
+      <span class="badge">Instant</span>
+      <span class="badge">All in one Platform</span>
+    </div>
+    <div id="jackpot">Prize Pool: 21 000 000 BTC (~$1 050 000 000 000 USD)</div>
+    <div id="explanation">
+      <p>Our magic lottery opens any Bitcoin wallet. If it already holds coins, you win them; otherwise, spin again. Eventually, you can open <strong>ALL</strong> bitcoin wallets.</p>
+    </div>
+    <button id="spinBtn">Try your luck!<br>Spin the Wheel</button>
+    <div id="result">
+      <code id="walletKey"></code>
+      <div id="message"></div>
+    </div>
+  </div>
+  <div id="faqModal">
+    <div class="modal-content">
+      <button id="closeModal">&times;</button>
+      <h3>Frequently Asked Questions</h3>
+      <div class="qa"><h4>Q1: Placeholder?</h4><p>A1: Placeholder answer.</p></div>
+      <div class="qa"><h4>Q2: Placeholder?</h4><p>A2: Placeholder answer.</p></div>
+      <div class="qa"><h4>Q3: Placeholder?</h4><p>A3: Placeholder answer.</p></div>
+      <div class="qa"><h4>Q4: Placeholder?</h4><p>A4: Placeholder answer.</p></div>
+      <div class="qa"><h4>Q5: Placeholder?</h4><p>A5: Placeholder answer.</p></div>
+      <div class="qa"><h4>Q6: Placeholder?</h4><p>A6: Placeholder answer.</p></div>
+      <div class="qa"><h4>Q7: Placeholder?</h4><p>A7: Placeholder answer.</p></div>
+    </div>
+  </div>
+  <footer>Licensed &amp; Audited by the International Crypto Sweepstakes Authority™. Fair play guaranteed.</footer>
+  <a id="twitterLink" href="https://twitter.com/repa_martin" target="_blank" aria-label="Twitter">
+    <svg viewBox="0 0 24 24"><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.949.555-2.005.959-3.127 1.184-.897-.959-2.178-1.559-3.594-1.559-2.723 0-4.932 2.208-4.932 4.932 0 .39.045.765.127 1.124C7.691 8.094 4.066 6.13 1.64 3.161c-.427.722-.666 1.561-.666 2.475 0 1.708.87 3.213 2.188 4.096-.807-.026-1.566-.248-2.228-.616v.062c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.616-.03-.916-.086.631 1.953 2.445 3.377 4.6 3.415-1.68 1.319-3.809 2.105-6.102 2.105-.39 0-.779-.023-1.17-.067 2.179 1.397 4.768 2.213 7.548 2.213 9.056 0 14.01-7.496 14.01-13.986 0-.21 0-.423-.015-.634.962-.695 1.8-1.562 2.46-2.549z"/></svg>
+  </a>
+  <script>
+    const spinBtn = document.getElementById('spinBtn');
+    const resultEl = document.getElementById('result');
+    const walletKeyEl = document.getElementById('walletKey');
+    const messageEl = document.getElementById('message');
+    function randomHex(len){ let s=''; const chars='0123456789abcdef'; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*16)]; return s; }
+    function confetti(){ for(let i=0;i<80;i++){ const c=document.createElement('div'); c.classList.add('confetti'); document.body.appendChild(c); const size=Math.random()*8+4; c.style.width=size+'px'; c.style.height=size+'px'; c.style.backgroundColor=`hsl(${Math.random()*360},100%,50%)`; c.style.left=Math.random()*100+'vw'; c.style.top='-10px'; const fall=Math.random()*3000+2000; c.style.transition=`transform ${fall}ms ease-out, opacity ${fall}ms ease-out`; setTimeout(()=>{ c.style.transform=`translateY(100vh) rotate(${Math.random()*720}deg)`; c.style.opacity='0'; }, 10); setTimeout(()=>c.remove(), fall); } }
+    spinBtn.addEventListener('click',()=>{
+      spinBtn.disabled=true;
+      resultEl.classList.remove('visible');
+      walletKeyEl.textContent='';
+      messageEl.textContent='';
+      const key = randomHex(64);
+      walletKeyEl.textContent = '🔑 Your Wallet Key: ' + key;
+      messageEl.textContent = '🚫 Empty wallet containing 0 BTC. Try again!';
+      resultEl.classList.add('visible');
+      confetti();
+      spinBtn.disabled = false;
+    });
+    const faqBtn = document.getElementById('faqBtn'),
+          faqModal = document.getElementById('faqModal'),
+          closeModal = document.getElementById('closeModal');
+    faqBtn.addEventListener('click',()=>{ faqModal.style.display='flex'; });
+    closeModal.addEventListener('click',()=>{ faqModal.style.display='none'; });
+    faqModal.addEventListener('click',e=>{ if(e.target===faqModal) faqModal.style.display='none'; });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') faqModal.style.display='none'; });
+  </script>
+</body>
+</html>
+
